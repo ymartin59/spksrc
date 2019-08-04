@@ -120,6 +120,12 @@ dependency-tree:
 	  $(MAKE) --no-print-directory -C ../../$$depend dependency-tree ; \
 	done
 
+download-depends: $(DOWNLOAD_TARGET)
+	@for depend in $(BUILD_DEPENDS) $(DEPENDS) ; \
+	do \
+	  $(MAKE) --no-print-directory -C ../../$$depend download-depends ; \
+	done
+
 .PHONY: all-archs
 all-archs: $(addprefix arch-,$(AVAILABLE_ARCHS))
 

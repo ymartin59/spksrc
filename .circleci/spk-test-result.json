@@ -1,0 +1,36 @@
+[
+  {
+    "description": "As a user of Cucumber.js\n  I want to have documentation on Cucumber\n  So that I can concentrate on building awesome applications",
+    "keyword": "Package",
+    "name": "Package ${NAME}-${TC}",
+    "line": 1,
+    "id": "package-${NAME}-${TC}",
+    "tags": [],
+    "uri": "spk/${NAME}",
+    "elements": [
+      {
+        "id": "example-feature;reading-documentation",
+        "keyword": "Scenario",
+        "line": 7,
+        "name": "Reading documentation",
+        "tags": [],
+        "type": "scenario",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 1,
+            "name": "I open Google chrome",
+            "match": {
+              "location": "${PACKAGE}"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

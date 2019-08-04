@@ -54,6 +54,12 @@ dependency-tree:
 	  $(MAKE) --no-print-directory -C ../../$$depend dependency-tree ; \
 	done
 
+download-depends: $(DOWNLOAD_TARGET)
+	@for depend in $(DEPENDS) ; \
+	do \
+	  $(MAKE) --no-print-directory -C ../../$$depend download-depends ; \
+	done
+
 ### Clean rules
 clean:
 	rm -fr $(WORK_DIR)

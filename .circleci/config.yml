@@ -1,0 +1,138 @@
+version: 2.1
+description: check packages build for x64 and aarch64
+
+orbs:
+  spksrc-orb:
+    executors:
+      spksrc-docker-executor:
+        docker:
+          - image: synocommunity/spksrc:latest
+    commands:
+      spksrc-make-setup:
+        steps:
+          - run:
+              name: Setup
+              command: make setup
+
+      spksrc-restore-cache:
+        steps:
+          - restore_cache:
+              key: "spksrc-distrib-{{ .Environment.CIRCLE_WORKFLOW_ID }}"
+
+      spksrc-save-cache:
+        steps:
+          - save_cache:
+              paths:
+                - /spksrc/distrib
+              key: "spksrc-distrib-{{ .Environment.CIRCLE_WORKFLOW_ID }}"
+
+      spksrc-make-arch:
+        parameters:
+          spk_name:
+            type: string
+          arch_name:
+            type: string
+          tc_version:
+            type: string
+        steps:
+          - run:
+              name: "Build <<parameters.spk_name>> for <<parameters.arch_name>>-<<parameters.tc_version>>"
+              command: cd "/spksrc/spk/<<parameters.spk_name>>" && make "arch-<<parameters.arch_name>>-<<parameters.tc_version>>" || true
+              no_output_timeout: 30m
+
+      spksrc-download-toolchain:
+        parameters:
+          arch_name:
+            type: string
+            default: "x64"
+          tc_version:
+            type: string
+            default: "6.1"
+        steps:
+          - run:
+              name: "Download toolchain <<parameters.arch_name>>-<<parameters.tc_version>>"
+              command: cd "/spksrc/toolchains/syno-<<parameters.arch_name>>-<<parameters.tc_version>>" && make download || true
+              no_output_timeout: 15m
+
+      spksrc-download-depends:
+        parameters:
+          spk_name:
+            type: string
+        steps:
+          - run:
+              name: "Download depends <<parameters.spk_name>>"
+              command: cd "/spksrc/spk/<<parameters.spk_name>>" && make download-depends || true
+              no_output_timeout: 15m
+
+    jobs:
+      spksrc-make-spk:
+        parameters:
+          spk_name:
+            description: Package name, expected in spk/ folder
+            type: string
+            default: "nano"
+          arch_name:
+            description: Target architecture name
+            type: string
+            default: "x64"
+          tc_version:
+            description: DSM toolchain version
+            type: string
+            default: "6.1"
+        executor: spksrc-docker-executor
+        working_directory: /spksrc
+        steps:
+          - attach_workspace:
+              at: /spksrc
+          - spksrc-make-arch:
+              spk_name: "<<parameters.spk_name>>"
+              arch_name: "<<parameters.arch_name>>"
+              tc_version: "<<parameters.tc_version>>"
+          - run: ls packages/*.spk || true
+#          - run: mkdir results && ls packages/*.spk > tests/ || true
+#         - store_test_results: path: results/
+
+jobs:
+  prepare-workspace:
+    executor: spksrc-orb/spksrc-docker-executor
+    working_directory: /spksrc
+    steps:
+      - checkout
+      - spksrc-orb/spksrc-make-setup
+      - spksrc-orb/spksrc-download-toolchain:
+          arch_name: "x64"
+      - spksrc-orb/spksrc-download-toolchain:
+          arch_name: "aarch64"
+      - spksrc-orb/spksrc-download-depends:
+          spk_name: "tmux"
+      - spksrc-orb/spksrc-download-depends:
+          spk_name: "nano"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+workflows:
+  check-builds:
+    jobs:
+      - prepare-workspace
+      - spksrc-orb/spksrc-make-spk:
+          spk_name: "nano"
+          arch_name: "x64"
+          requires:
+            - prepare-workspace
+      - spksrc-orb/spksrc-make-spk:
+          spk_name: "nano"
+          arch_name: "aarch64"
+          requires:
+            - prepare-workspace
+      - spksrc-orb/spksrc-make-spk:
+          spk_name: "tmux"
+          arch_name: "x64"
+          requires:
+            - prepare-workspace
+      - spksrc-orb/spksrc-make-spk:
+          spk_name: "tmux"
+          arch_name: "aarch64"
+          requires:
+            - prepare-workspace
