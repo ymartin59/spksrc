@@ -11,8 +11,8 @@ RUN echo "deb http://deb.debian.org/debian stretch-backports main contrib non-fr
 
 # Install required packages
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y automake \
-        libtool \
+    apt-get install --no-install-recommends -y \
+        automake \
         bc \
         bison \
         build-essential \
@@ -38,6 +38,7 @@ RUN apt-get update && \
         libmount-dev \
         libpcre3-dev \
         libssl-dev \
+        libtool \
         libunistring-dev \
         unzip \
         lzip \
@@ -47,6 +48,7 @@ RUN apt-get update && \
         pkg-config \
         python3 \
         subversion \
+        ssh \
         swig \
         xmlto \
         zlib1g-dev && \
@@ -61,6 +63,9 @@ RUN wget https://bootstrap.pypa.io/get-pip.py -O - | python3
 # Install setuptools, pip, virtualenv, wheel and httpie for Python2
 RUN wget https://bootstrap.pypa.io/get-pip.py -O - | python
 RUN pip install virtualenv httpie
+
+# CircleCI CLI
+RUN curl -fLSs https://circle.ci/cli | bash
 
 # Volume pointing to spksrc sources
 VOLUME /spksrc
